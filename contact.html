@@ -96,35 +96,36 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-7">
                         <div class="wow fadeInUp" data-wow-delay="0.3s">
-                            <form>
+                            <form id="contactForm" novalidate>
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="name" placeholder="Your Name">
+                                            <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" required>
                                             <label for="name">Your Name</label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="email" class="form-control" id="email" placeholder="Your Email">
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="Your Email" required>
                                             <label for="email">Your Email</label>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="subject" placeholder="Subject">
+                                            <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject" required>
                                             <label for="subject">Subject</label>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <textarea class="form-control" placeholder="Leave a message here" id="message" style="height: 150px"></textarea>
+                                            <textarea class="form-control" placeholder="Leave a message here" id="message" name="message" style="height: 150px" required></textarea>
                                             <label for="message">Message</label>
                                         </div>
                                     </div>
                                     <div class="col-12">
-                                        <button class="btn btn-primary w-100 py-3" type="submit">Send Message</button>
+                                        <button class="btn btn-primary w-100 py-3" type="submit" id="submitBtn">Send Message</button>
                                     </div>
+                                    <div class="col-12" id="formAlert" style="display:none;"></div>
                                 </div>
                             </form>
                         </div>
@@ -229,6 +230,50 @@
 
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
+
+    <script>
+        // TODO: Replace with your deployed Apps Script Web App URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNu0rmguZm-7TyyrrH1pOJubfNFAgjTb-F4p9JD4JOJiEP5tOhmlQmK8Oz11Vy0KpuOg/exec';
+
+        document.getElementById('contactForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const alert = document.getElementById('formAlert');
+
+            const emailVal = document.getElementById('email').value;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                alert.className = 'col-12 alert alert-danger';
+                alert.textContent = 'Please enter a valid email address (must contain @ and .).';
+                alert.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            alert.style.display = 'none';
+
+            const data = new FormData(this);
+
+            try {
+                const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: data });
+                const json = await res.json();
+                if (json.result === 'success') {
+                    alert.className = 'col-12 alert alert-success';
+                    alert.textContent = 'Thank you! Your message has been received.';
+                    this.reset();
+                } else {
+                    throw new Error(json.error || 'Unknown error');
+                }
+            } catch (err) {
+                alert.className = 'col-12 alert alert-danger';
+                alert.textContent = 'Something went wrong. Please try again or email us directly.';
+            }
+
+            alert.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Send Message';
+        });
+    </script>
 </body>
 
 </html>
